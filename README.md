@@ -43,6 +43,11 @@ Es una versión jugable del Tetris clásico con todas las mecánicas que esperar
 - **Sistema de puntuación** clásico de Tetris (100 / 300 / 500 / 800 multiplicado por nivel).
 - **Niveles** que aumentan cada 10 líneas y aceleran la caída.
 - **Pausa** y **Game Over** con opción de reinicio.
+- **Skins** visuales seleccionables desde el panel (se guardan en `localStorage` y se aplican sin recargar):
+  - **Retro**: bloques cuadrados y colores planos (respeta el tema claro/oscuro).
+  - **Neon**: fondo negro y bloques con brillo (`shadowBlur`).
+  - **Pastel**: colores suaves y bordes redondeados.
+  - **Pixel art**: textura pixelada con bisel y borde oscuro en cada bloque.
 
 ---
 
@@ -98,7 +103,7 @@ El juego se compone de tres archivos que cooperan:
 Define la estructura visual:
 
 - Un `<canvas id="board">` de **300 × 600** píxeles donde se renderiza el tablero.
-- Un panel lateral con `SCORE`, `LINES`, `LEVEL`, vista de la siguiente pieza y la lista de controles.
+- Un panel lateral con el toggle de tema, el selector de `SKIN`, `SCORE`, `LINES`, `LEVEL`, vista de la siguiente pieza y la lista de controles.
 - Un overlay para los estados **PAUSA** y **GAME OVER**.
 
 ### 2. `style.css`
@@ -118,6 +123,7 @@ Contiene toda la lógica del juego. A grandes rasgos:
 - **Puntuación**: usa la tabla clásica `[0, 100, 300, 500, 800]` multiplicada por el nivel actual; el hard drop suma 2 puntos por celda recorrida y el soft drop 1 punto por fila.
 - **Nivel y velocidad**: el nivel sube cada 10 líneas; la velocidad de caída se calcula como `max(100, 1000 − (level − 1) × 90)` milisegundos.
 - **Ghost piece** (`ghostY`): proyecta la posición final de la pieza actual hacia abajo y la dibuja con `globalAlpha = 0.2`.
+- **Skins** (`SKINS`): cada skin define su paleta (`colors`), color de rejilla, fondo del tablero y su propia función `drawBlock`; `drawBlock` global delega en la skin activa.
 
 ### Flujo del juego
 
@@ -175,6 +181,7 @@ Algunos parámetros fáciles de tunear en `game.js`:
 | `ROWS`         | Filas del tablero                        | `20`                  |
 | `BLOCK`        | Tamaño en píxeles de cada celda          | `30`                  |
 | `COLORS`       | Paleta de colores por tipo de pieza      | 9 colores             |
+| `SKINS`        | Skins visuales (paleta + dibujo)         | retro/neon/pastel/pixel |
 | `BOMB_EVERY`   | Líneas necesarias para cada bomba        | `5`                   |
 | `LINE_SCORES`  | Puntos por 1, 2, 3 o 4 líneas eliminadas | `[0,100,300,500,800]` |
 | `dropInterval` | Velocidad inicial de caída en ms         | `1000`                |
