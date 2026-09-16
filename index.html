@@ -56,7 +56,55 @@
       <div class="overlay-box">
         <p id="overlay-title">GAME OVER</p>
         <p id="overlay-score"></p>
+
+        <div id="gameover-records" class="hidden">
+          <div id="record-form" class="record-form hidden">
+            <p class="new-record">¡Nuevo récord!</p>
+            <div class="record-form-row">
+              <input type="text" id="name-input" maxlength="12" placeholder="Tu nombre" autocomplete="off" spellcheck="false" />
+              <button id="save-record-btn" class="btn">Guardar</button>
+            </div>
+          </div>
+          <div class="records-block">
+            <table class="records-table">
+              <thead>
+                <tr><th>#</th><th>Nombre</th><th>Puntos</th><th>Líneas</th><th>Combo</th><th>Nivel</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+            <p class="records-stats">Mejor combo: <span class="best-combo">0</span> · Líneas máximas: <span class="max-lines">0</span></p>
+            <button class="btn btn-secondary reset-btn">Borrar records</button>
+            <div class="reset-confirm hidden">
+              <span>¿Borrar todos los records?</span>
+              <button class="btn btn-secondary confirm-yes">Sí</button>
+              <button class="btn btn-secondary confirm-no">No</button>
+            </div>
+          </div>
+        </div>
+
         <button id="restart-btn">Reiniciar</button>
+      </div>
+    </div>
+
+    <div id="start-screen" class="overlay">
+      <div class="overlay-box">
+        <p class="start-title">RECORDS</p>
+        <div class="records-block">
+          <table class="records-table">
+            <thead>
+              <tr><th>#</th><th>Nombre</th><th>Puntos</th><th>Líneas</th><th>Combo</th><th>Nivel</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <p class="records-stats">Mejor combo: <span class="best-combo">0</span> · Líneas máximas: <span class="max-lines">0</span></p>
+          <button class="btn btn-secondary reset-btn">Borrar records</button>
+          <div class="reset-confirm hidden">
+            <span>¿Borrar todos los records?</span>
+            <button class="btn btn-secondary confirm-yes">Sí</button>
+            <button class="btn btn-secondary confirm-no">No</button>
+          </div>
+        </div>
+        <button id="play-btn" class="btn">Jugar</button>
       </div>
     </div>
   </div>
