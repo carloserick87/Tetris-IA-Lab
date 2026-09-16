@@ -19,15 +19,16 @@ Three files: `index.html` (DOM + canvases), `style.css` (dark theme), `game.js` 
 
 `game.js` key points:
 
-- **Global mutable state**: `board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId, nextBombAt, bombPending` declared at top; `init()` resets all of them (also used by restart button).
+- **Global mutable state**: `board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId, nextBombAt, bombPending, baseLevel` declared at top; `init()` resets all of them (also used by restart buttons). Outside per-game state: `theme`, `startLevel`, `pressedKeys`, `blockedKeys`.
 - **Piece type = color index = cell value.** `PIECES[type]` matrices contain the type number in filled cells; `merge()` copies those values into `board`; `drawBlock` looks up `COLORS[value]`. Index 0 / `null` = empty. Adding a piece means updating `PIECES` and `COLORS` together (`randomPiece()` derives the count from `PIECES.length`).
 - **Bomb** (`BOMB = 9`): not in `PIECES` (so `randomPiece()` never yields it), only `COLORS[9]`; built by `bombPiece()` (1x1). `clearLines()` sets `bombPending` every `BOMB_EVERY` lines → next `spawn()` puts it in `next`. `lockPiece()` calls `explode()` (clears 3x3, no gravity, +10×level per cell) instead of `merge()`/`clearLines()`. `drawBlock` adds a dark circle for it.
 - **Pieces** are `{ type, shape, x, y }`; rotation is `rotateCW` (transpose + reverse) with kicks `[0,-1,1,-2,2]` in `tryRotate`. `collide(shape, ox, oy)` is the single source of truth for bounds/overlap (cells with `y < 0` are allowed).
 - **Lock flow**: `lockPiece()` → `merge()` → `clearLines()` (updates lines/score/level/`dropInterval`) → `spawn()` (promotes `next`, game over if spawn collides) → `drawNext()`.
 - **Loop**: `requestAnimationFrame(loop)` accumulates `dt` into `dropAccum`; gravity step at `dropInterval` (`max(100, 1000 - (level-1)*90)` ms). `draw()` redraws everything every frame (grid, board, ghost at alpha 0.2, current piece).
-- **Pause/game over** stop the loop via `cancelAnimationFrame(animId)` and reuse one overlay (`#overlay`, toggled with `.hidden` class; title/score text set in JS).
-- **Input**: single `keydown` listener using `e.code`; `updateHUD()` is called after every key, so drop functions don't always update HUD themselves.
-- **Scoring**: `LINE_SCORES[cleared] * level`; hard drop +2/cell, soft drop +1/row. Level = `floor(lines/10) + 1`.
+- **Pause/game over** stop the loop via `cancelAnimationFrame(animId)`. Game over uses `#overlay` (title/score set in JS); pause uses a separate `#pause-menu` (both toggled with `.hidden`): Reanudar, Reiniciar (`init()`), Ver controles (toggles `#pause-controls`), Nivel inicial (`#start-level-select`).
+- **Start level**: `startLevel` (1–`MAX_START_LEVEL`, persisted in `localStorage 'tetris-start-level'`, read/written with try/catch + `parseStartLevel`) is copied into `baseLevel` by `init()`, so changing it only affects the next game. `dropInterval` comes from `calcDropInterval(level)`.
+- **Input**: single `keydown` listener using `e.code`; `P`/`Escape` toggle pause (non-repeat only); while paused/game over every other key is ignored by the game (browser default kept for menu keyboard nav). On resume/`init()`, `blockedKeys` = keys still held (`pressedKeys`, tracked via keydown/keyup, cleared on window blur) and those are ignored until keyup; resume also resets `dropAccum`/`lastTime` and blurs the focused menu button. `updateHUD()` is called after every key, so drop functions don't always update HUD themselves.
+- **Scoring**: `LINE_SCORES[cleared] * level`; hard drop +2/cell, soft drop +1/row. Level = `max(baseLevel, floor(lines/10) + 1)`.
 
 ## Coupled values
 
