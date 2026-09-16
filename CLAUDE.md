@@ -20,7 +20,7 @@ Three files: `index.html` (DOM + canvases), `style.css` (dark theme), `game.js` 
 `game.js` key points:
 
 - **Global mutable state**: `board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId` declared at top; `init()` resets all of them (also used by restart button).
-- **Piece type = color index = cell value.** `PIECES[type]` matrices contain the type number in filled cells; `merge()` copies those values into `board`; `drawBlock` looks up `COLORS[value]`. Index 0 / `null` = empty. Adding a piece means updating `PIECES`, `COLORS`, and the `* 7` in `randomPiece()` together.
+- **Piece type = color index = cell value.** `PIECES[type]` matrices contain the type number in filled cells; `merge()` copies those values into `board`; `drawBlock` looks up `COLORS[value]`. Index 0 / `null` = empty. Adding a piece means updating `PIECES` and `COLORS` together (`randomPiece()` derives the count from `PIECES.length`).
 - **Pieces** are `{ type, shape, x, y }`; rotation is `rotateCW` (transpose + reverse) with kicks `[0,-1,1,-2,2]` in `tryRotate`. `collide(shape, ox, oy)` is the single source of truth for bounds/overlap (cells with `y < 0` are allowed).
 - **Lock flow**: `lockPiece()` → `merge()` → `clearLines()` (updates lines/score/level/`dropInterval`) → `spawn()` (promotes `next`, game over if spawn collides) → `drawNext()`.
 - **Loop**: `requestAnimationFrame(loop)` accumulates `dt` into `dropAccum`; gravity step at `dropInterval` (`max(100, 1000 - (level-1)*90)` ms). `draw()` redraws everything every frame (grid, board, ghost at alpha 0.2, current piece).
