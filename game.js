@@ -19,6 +19,58 @@ const COLORS = [
   '#ff5252', // B - bomba (fuera de PIECES)
 ];
 
+// Paletas alternativas: mismo orden e indices que COLORS (0 vacio ... 8 tuerca, 9 bomba)
+const COLORS_NEON = [
+  null,
+  '#00f0ff', // I
+  '#fff700', // O
+  '#c04dff', // T
+  '#39ff6a', // S
+  '#ff2d6f', // Z
+  '#2d7bff', // J
+  '#ff9d00', // L
+  '#d8f0ff', // N
+  '#ff3131', // B
+];
+
+const COLORS_PASTEL = [
+  null,
+  '#a8e6e4', // I
+  '#fdf0b5', // O
+  '#d9c2ef', // T
+  '#bfe6c4', // S
+  '#f5c2c2', // Z
+  '#c3d9f5', // J
+  '#fad7b0', // L
+  '#dcdfe4', // N
+  '#f2a6a6', // B
+];
+
+const COLORS_PIXEL = [
+  null,
+  '#3a9aa8', // I
+  '#cfa63a', // O
+  '#8e4fa3', // T
+  '#5f9e61', // S
+  '#b04a4a', // Z
+  '#4a6fa8', // J
+  '#c07a33', // L
+  '#8a8f96', // N
+  '#c43c3c', // B
+];
+
+// Cada skin define paleta, funcion de dibujo de bloque y (salvo retro) color de rejilla.
+// themeable: true -> respeta el toggle claro/oscuro; false -> la skin impone su propio fondo.
+const SKINS = {
+  retro:  { label: 'Retro',  colors: COLORS,        draw: drawBlockRetro,  themeable: true },
+  neon:   { label: 'Neon',   colors: COLORS_NEON,   draw: drawBlockNeon,   themeable: false, grid: '#1b1b33' },
+  pastel: { label: 'Pastel', colors: COLORS_PASTEL, draw: drawBlockPastel, themeable: false, grid: '#e4dcef' },
+  pixel:  { label: 'Pixel',  colors: COLORS_PIXEL,  draw: drawBlockPixel,  themeable: false, grid: '#3a352b' },
+};
+
+const SKIN_KEY = 'tetris-skin';
+const THEME_KEY = 'tetris-theme';
+
 const PIECES = [
   null,
   [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], // I
@@ -47,9 +99,11 @@ const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 const themeToggle = document.getElementById('theme-toggle');
+const skinSelect = document.getElementById('skin-select');
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId, nextBombAt, bombPending;
 let theme = 'dark';
+let skin = 'retro';
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -190,26 +244,111 @@ function updateHUD() {
   levelEl.textContent = level;
 }
 
-function drawBlock(context, x, y, colorIndex, size, alpha) {
-  if (!colorIndex) return;
-  const color = COLORS[colorIndex];
-  context.globalAlpha = alpha ?? 1;
+// Aclara (amount > 0) u oscurece (amount < 0) un color '#rrggbb'.
+function shade(hex, amount) {
+  const n = parseInt(hex.slice(1), 16);
+  const ch = [n >> 16 & 255, n >> 8 & 255, n & 255].map(v => {
+    const t = amount > 0 ? 255 : 0;
+    return Math.round(v + (t - v) * Math.abs(amount));
+  });
+  return `rgb(${ch[0]},${ch[1]},${ch[2]})`;
+}
+
+// Camino rectangular con esquinas redondeadas (respaldo si no hay roundRect nativo).
+function roundRectPath(context, px, py, w, h, r) {
+  if (context.roundRect) {
+    context.beginPath();
+    context.roundRect(px, py, w, h, r);
+    return;
+  }
+  context.beginPath();
+  context.moveTo(px + r, py);
+  context.arcTo(px + w, py, px + w, py + h, r);
+  context.arcTo(px + w, py + h, px, py + h, r);
+  context.arcTo(px, py + h, px, py, r);
+  context.arcTo(px, py, px + w, py, r);
+  context.closePath();
+}
+
+function drawBlockRetro(context, px, py, size, color) {
   context.fillStyle = color;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
+  context.fillRect(px + 1, py + 1, size - 2, size - 2);
   // highlight
   context.fillStyle = 'rgba(255,255,255,0.12)';
-  context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
-  if (colorIndex === BOMB) {
-    context.fillStyle = 'rgba(0,0,0,0.6)';
-    context.beginPath();
-    context.arc(x * size + size / 2, y * size + size / 2, size * 0.3, 0, Math.PI * 2);
-    context.fill();
+  context.fillRect(px + 1, py + 1, size - 2, 4);
+}
+
+function drawBlockNeon(context, px, py, size, color) {
+  context.shadowColor = color;
+  context.shadowBlur = size * 0.5;
+  context.fillStyle = 'rgba(0,0,0,0.55)';
+  context.fillRect(px + 2, py + 2, size - 4, size - 4);
+  context.strokeStyle = color;
+  context.lineWidth = 2;
+  context.strokeRect(px + 2.5, py + 2.5, size - 5, size - 5);
+  // sin reset el glow contamina rejilla, fantasma y resto del frame
+  context.shadowBlur = 0;
+  context.shadowColor = 'transparent';
+}
+
+function drawBlockPastel(context, px, py, size, color) {
+  const r = size * 0.28;
+  roundRectPath(context, px + 1, py + 1, size - 2, size - 2, r);
+  context.fillStyle = color;
+  context.fill();
+  context.save();
+  context.clip();
+  context.fillStyle = 'rgba(255,255,255,0.35)';
+  context.fillRect(px + 1, py + 1, size - 2, size * 0.32);
+  context.restore();
+  context.strokeStyle = shade(color, -0.18);
+  context.lineWidth = 1;
+  roundRectPath(context, px + 1.5, py + 1.5, size - 3, size - 3, r);
+  context.stroke();
+}
+
+// Posiciones fijas (fraccion de celda) del dither: deterministas, no parpadean entre frames.
+const PIXEL_DITHER = [[0.30, 0.45], [0.55, 0.30], [0.65, 0.65], [0.40, 0.72]];
+
+function drawBlockPixel(context, px, py, size, color) {
+  const b = 3;
+  context.fillStyle = color;
+  context.fillRect(px, py, size, size);
+  // bisel
+  context.fillStyle = shade(color, 0.35);
+  context.fillRect(px, py, size, b);
+  context.fillRect(px, py, b, size);
+  context.fillStyle = shade(color, -0.35);
+  context.fillRect(px, py + size - b, size, b);
+  context.fillRect(px + size - b, py, b, size);
+  // textura
+  const dot = Math.max(2, Math.round(size / 10));
+  for (let i = 0; i < PIXEL_DITHER.length; i++) {
+    context.fillStyle = i % 2 ? shade(color, 0.22) : shade(color, -0.22);
+    context.fillRect(px + PIXEL_DITHER[i][0] * size, py + PIXEL_DITHER[i][1] * size, dot, dot);
   }
+}
+
+function drawBombMark(context, px, py, size) {
+  context.fillStyle = 'rgba(0,0,0,0.6)';
+  context.beginPath();
+  context.arc(px + size / 2, py + size / 2, size * 0.3, 0, Math.PI * 2);
+  context.fill();
+}
+
+function drawBlock(context, x, y, colorIndex, size, alpha) {
+  if (!colorIndex) return;
+  const s = SKINS[skin];
+  const px = x * size;
+  const py = y * size;
+  context.globalAlpha = alpha ?? 1;
+  s.draw(context, px, py, size, s.colors[colorIndex]);
+  if (colorIndex === BOMB) drawBombMark(context, px, py, size);
   context.globalAlpha = 1;
 }
 
 function drawGrid() {
-  ctx.strokeStyle = GRID_COLORS[theme];
+  ctx.strokeStyle = SKINS[skin].grid ?? GRID_COLORS[theme];
   ctx.lineWidth = 0.5;
   for (let c = 1; c < COLS; c++) {
     ctx.beginPath();
@@ -350,8 +489,23 @@ restartBtn.addEventListener('click', init);
 
 function setTheme(t) {
   theme = t;
-  document.body.classList.toggle('light-theme', theme === 'light');
-  localStorage.setItem('tetris-theme', theme);
+  // el tema claro solo se aplica en skins themeable; la preferencia se guarda igual
+  document.body.classList.toggle('light-theme', theme === 'light' && SKINS[skin].themeable);
+  localStorage.setItem(THEME_KEY, theme);
+}
+
+function applySkin(name, repaint) {
+  skin = SKINS[name] ? name : 'retro';
+  document.body.dataset.skin = skin;
+  const themeable = SKINS[skin].themeable;
+  document.body.classList.toggle('light-theme', themeable && theme === 'light');
+  themeToggle.disabled = !themeable;
+  localStorage.setItem(SKIN_KEY, skin);
+  // en pausa o game over el rAF esta cancelado: hay que repintar a mano
+  if (repaint) {
+    draw();
+    drawNext();
+  }
 }
 
 themeToggle.addEventListener('change', () => {
@@ -360,7 +514,12 @@ themeToggle.addEventListener('change', () => {
   drawNext();
 });
 
-setTheme(localStorage.getItem('tetris-theme') === 'light' ? 'light' : 'dark');
+skinSelect.addEventListener('change', () => applySkin(skinSelect.value, true));
+
+theme = localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark';
 themeToggle.checked = theme === 'light';
+applySkin(localStorage.getItem(SKIN_KEY), false);
+skinSelect.value = skin;
+setTheme(theme);
 
 init();
