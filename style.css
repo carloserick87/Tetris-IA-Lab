@@ -46,6 +46,68 @@ body.light-theme {
   --grid-color: #dcdce6;
 }
 
+
+/* ---- Skins: redefinen las variables de :root ---- */
+body[data-skin="neon"] {
+  --bg: #05050a;
+  --text: #d8f0ff;
+  --title-color: #ff4fd8;
+  --title-glow: rgba(255, 79, 216, 0.45);
+  --board-bg: #000000;
+  --board-border: #3a1f5c;
+  --panel-label: #7a5ca8;
+  --accent: #4dffe0;
+  --controls-text: #8a7ab8;
+  --kbd-bg: #150d26;
+  --kbd-border: #4a2d78;
+  --kbd-text: #b89aff;
+  --overlay-bg: rgba(5, 0, 15, 0.8);
+  --overlay-title: #ff2d6f;
+  --btn-bg: #4dffe0;
+  --btn-text: #05050a;
+  --btn-hover: #9dfff0;
+}
+
+body[data-skin="pastel"] {
+  --bg: #f6f1fb;
+  --text: #4a4458;
+  --title-color: #8a7bb8;
+  --title-glow: rgba(138, 123, 184, 0.3);
+  --board-bg: #fffdff;
+  --board-border: #d9cfe6;
+  --panel-label: #9a92ad;
+  --accent: #8a7bb8;
+  --controls-text: #6e6880;
+  --kbd-bg: #ece5f5;
+  --kbd-border: #d9cfe6;
+  --kbd-text: #5c5670;
+  --overlay-bg: rgba(255, 253, 255, 0.85);
+  --overlay-title: #d98a8a;
+  --btn-bg: #8a7bb8;
+  --btn-text: #fffdff;
+  --btn-hover: #a396cc;
+}
+
+body[data-skin="pixel"] {
+  --bg: #1d1a14;
+  --text: #e6dcc4;
+  --title-color: #e0b64d;
+  --title-glow: rgba(224, 182, 77, 0.35);
+  --board-bg: #26221a;
+  --board-border: #5a4f3a;
+  --panel-label: #8a7a58;
+  --accent: #e0b64d;
+  --controls-text: #a89878;
+  --kbd-bg: #332d22;
+  --kbd-border: #5a4f3a;
+  --kbd-text: #c4b490;
+  --overlay-bg: rgba(20, 17, 10, 0.8);
+  --overlay-title: #c43c3c;
+  --btn-bg: #e0b64d;
+  --btn-text: #1d1a14;
+  --btn-hover: #f0cd76;
+}
+
 body {
   background: var(--bg);
   color: var(--text);
@@ -161,6 +223,33 @@ body {
 
 .switch input:checked + .slider::before {
   transform: translateX(18px);
+}
+
+.switch input:disabled + .slider {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---- Selector de skin ---- */
+#skin-select {
+  background: var(--kbd-bg);
+  color: var(--text);
+  border: 1px solid var(--kbd-border);
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+#skin-select:hover {
+  border-color: var(--accent);
+}
+
+#skin-select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 /* ---- Controles ---- */
